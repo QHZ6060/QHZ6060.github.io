@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task c: Wireframe Sierpinski Gasket</title>
+    <style>
+        canvas {
+            border: 1px solid #333;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Task c: Wireframe Sierpinski Gasket</h1>
+    <div class="controls">
+        <label for="level">Recursion Level: </label>
+        <input type="number" id="level" min="0" max="6" value="1">
+        <button id="draw">Draw</button>
+    </div>
+    <canvas id="glCanvas" width="600" height="600"></canvas>
+
+    <script src="../js/common/gl-matrix-min.js"></script>
+    <script src="../js/common/initShaders.js"></script>
+    <script src="../js/common/webgl-utils.js"></script>
+    <script src="../js/ch02/gasket-wireframe.js"></script>
+    <script>
+        // 初始化WebGL上下文
+        const canvas = document.getElementById('glCanvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        
+        if (!gl) {
+            alert('Unable to initialize WebGL. Your browser may not support it.');
+        }
+        
+        // 初始化着色器程序
+        let program;
+        function init() {
+            const vsSource = `
+                attribute vec4 a_Position;
+                attribute vec4 a_Color;
+                varying vec4 v_Color;
+                void main() {
+                    gl_Position = a_Position;
+                    v_Color = a_Color;
+                }
+            `;
+            
+            const fsSource = `
+                precision mediump float;
+                varying vec4 v_Color;
+                void main() {
+                    gl_FragColor = v_Color;
+                }
+            `;
+            
+            program = initShaders(gl, vsSource, fsSource);
+            gl.useProgram(program);
+        }
+        
+        // 获取着色器变量位置
+        function getLocations() {
+            return {
+                a_Position: gl.getAttribLocation(program, 'a_Position'),
+                a_Color: gl.getAttribLocation(program, 'a_Color')
+            };
+        }
+        
+        // 绘制函数
+        function draw() {
+            const level = parseInt(document.getElementById('level').value);
+            const locations = getLocations();
+            
+            // 生成线框Sierpinski Gasket数据
+            const { vertices, colors } = gasketWireframe.generate(level);
+            
+            // 设置顶点缓冲区
+            const vertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+            gl.vertexAttribPointer(locations.a_Position, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(locations.a_Position);
+            
+            // 设置颜色缓冲区
+            const colorBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+            gl.vertexAttribPointer(locations.a_Color, 4, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(locations.a_Color);
+            
+            // 清除画布并绘制
+            gl.clearColor(1.0, 1.0, 1.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.LINES, 0, vertices.length / 3);
+        }
+        
+        // 初始化并设置事件监听
+        init();
+        document.getElementById('draw').addEventListener('click', draw);
+        
+        // 初始绘制
+        draw();
+    </script>
+</body>
+</html>

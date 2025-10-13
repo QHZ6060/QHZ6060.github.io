@@ -1,1 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《计算机图形学》实验导航</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
+        body {
+            background-color: #f0f2f5;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(69, 104, 220, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(69, 104, 220, 0.05) 0%, transparent 20%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部标题区域 */
+        .header {
+            background: linear-gradient(135deg, #4568dc, #b06ab3);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* 个人信息区域 */
+        .info-section {
+            padding: 25px 40px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .info-item i {
+            color: #4568dc;
+            font-size: 1.4rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* 实验导航主体 */
+        .experiments-container {
+            flex: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #2d3436;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4568dc;
+            display: inline-block;
+        }
+
+        .experiments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        /* 实验卡片样式 */
+        .experiment-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .experiment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .experiment-header {
+            padding: 20px;
+            background-color: #f1f5f9;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .experiment-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3436;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .experiment-title i {
+            color: #4568dc;
+        }
+
+        .experiment-status {
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background-color: #ffeaa7;
+            color: #fdcb6e;
+        }
+
+        .status-completed {
+            background-color: #a8e6cf;
+            color: #2ecc71;
+        }
+
+        .experiment-body {
+            padding: 20px;
+        }
+
+        .experiment-desc {
+            color: #636e72;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .tasks-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .task-btn {
+            padding: 6px 12px;
+            background-color: #e8f4fd;
+            color: #4568dc;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .task-btn i {
+            font-size: 0.75rem;
+        }
+
+        .task-btn:hover {
+            background-color: #4568dc;
+            color: white;
+        }
+
+        .view-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #f1f5f9;
+            color: #2d3436;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .view-btn:hover {
+            background-color: #4568dc;
+            color: white;
+        }
+
+        .view-btn:disabled {
+            background-color: #f1f1f1;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4568dc;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .container {
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .info-section {
+                gap: 15px 20px;
+                padding: 15px 20px;
+            }
+
+            .experiments-container {
+                padding: 20px;
+            }
+
+            .experiments-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题区域 -->
+        <div class="header">
+            <div class="header-content">
+                <h1>《计算机图形学》实验</h1>
+                <p>Experiment Navigation System</p>
+            </div>
+        </div>
+
+        <!-- 个人信息区域 -->
+        <div class="info-section">
+            <div class="info-item">
+                <i class="fa fa-graduation-cap" aria-hidden="true"></i>
+                <span>专业：医学信息工程一班</span>
+            </div>
+            <div class="info-item">
+                <i class="fa fa-user" aria-hidden="true"></i>
+                <span>姓名：全智红</span>
+            </div>
+            <div class="info-item">
+                <i class="fa fa-id-card" aria-hidden="true"></i>
+                <span>学号：202312213501031</span>
+            </div>
+        </div>
+
+        <!-- 实验导航主体 -->
+        <div class="experiments-container">
+            <h2 class="section-title">实验列表</h2>
+            <div class="experiments-grid">
+                <!-- 实验一 -->
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <div class="experiment-title">
+                            <i class="fa fa-cube" aria-hidden="true"></i>
+                            实验一：
+                        </div>
+                        <span class="experiment-status status-completed">已完成</span>
+                    </div>
+                    <div class="experiment-body">
+                        <p class="experiment-desc">
+                            
+                        </p>
+                        <div class="tasks-container">
+                            <button class="task-btn" onclick="window.open('lab1/demos/chap1-demo-1.html', '_blank')">
+                                <i class="fa fa-circle" aria-hidden="true"></i> 任务A
+                            </button>
+                            <button class="task-btn" onclick="window.open('lab1/demos/chap1-demo-2.html', '_blank')">
+                                <i class="fa fa-square" aria-hidden="true"></i> 任务B
+                            </button>
+                            <button class="task-btn" onclick="window.open('lab1/demos/chap1-demo-3.html', '_blank')">
+                                <i class="fa fa-paint-brush" aria-hidden="true"></i> 任务C
+                            </button>
+                            <button class="task-btn" onclick="window.open('lab1/demos/chap1-demo-4.html', '_blank')">
+                                <i class="fa fa-rotate-right" aria-hidden="true"></i> 任务D
+                            </button>
+                            <button class="task-btn" onclick="window.open('lab1/demos/chap1-demo-5.html', '_blank')">
+                                <i class="fa fa-sitemap" aria-hidden="true"></i> 任务E
+                            </button>
+                        </div>
+                        <button class="view-btn" onclick="window.open('lab1/demos/chap1-demo-1.html', '_blank')">
+                            <i class="fa fa-arrow-right" aria-hidden="true"></i> 进入实验一
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 实验二（已完成，包含任务A-E） -->
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <div class="experiment-title">
+                            <i class="fa fa-puzzle-piece" aria-hidden="true"></i>
+                            实验二：谢尔宾斯基垫片
+                        </div>
+                        <span class="experiment-status status-completed">已完成</span>
+                    </div>
+                    <div class="experiment-body">
+                        <p class="experiment-desc">
+                            实现谢尔宾斯基垫片的生成与渲染，包括2D/3D效果、颜色映射、旋转动画等高级特性。
+                        </p>
+                        <div class="tasks-container">
+                            <button class="task-btn" onclick="window.open('lab2/demos/chap2-demo-1.html', '_blank')">
+                                <i class="fa fa-circle" aria-hidden="true"></i> 任务A
+                            </button>
+                            <button class="task-btn" onclick="window.open('lab2/demos/chap2-demo-2.html', '_blank')">
+                                <i class="fa fa-square" aria-hidden="true"></i> 任务B
+                            </button>
+                            <button class="task-btn" onclick="window.open('lab2/demos/chap2-demo-3.html', '_blank')">
+                                <i class="fa fa-paint-brush" aria-hidden="true"></i> 任务C
+                            </button>
+                            <button class="task-btn" onclick="window.open('lab2/demos/chap2-demo-4.html', '_blank')">
+                                <i class="fa fa-rotate-right" aria-hidden="true"></i> 任务D
+                            </button>
+                            <button class="task-btn" onclick="window.open('lab2/demos/chap2-demo-5.html', '_blank')">
+                                <i class="fa fa-sitemap" aria-hidden="true"></i> 任务E
+                            </button>
+                        </div>
+                        <button class="view-btn" onclick="window.open('lab2/demos/chap2-demo-1.html', '_blank')">
+                            <i class="fa fa-arrow-right" aria-hidden="true"></i> 进入实验二
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 实验三至十（待完成） -->
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <div class="experiment-title">
+                            <i class="fa fa-refresh" aria-hidden="true"></i>
+                            实验三：图形变换
+                        </div>
+                        <span class="experiment-status status-pending">待完成</span>
+                    </div>
+                    <div class="experiment-body">
+                        <p class="experiment-desc">
+                            学习并实现图形的平移、旋转、缩放等基本变换，以及复合变换的应用。
+                        </p>
+                        <button class="view-btn" disabled>
+                            <i class="fa fa-lock" aria-hidden="true"></i> 未完成，无法查看
+                        </button>
+                    </div>
+                </div>
+
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <div class="experiment-title">
+                            <i class="fa fa-picture-o" aria-hidden="true"></i>
+                            实验四：纹理映射
+                        </div>
+                        <span class="experiment-status status-pending">待完成</span>
+                    </div>
+                    <div class="experiment-body">
+                        <p class="experiment-desc">
+                            掌握纹理映射技术，实现图像纹理在3D模型表面的贴附与渲染。
+                        </p>
+                        <button class="view-btn" disabled>
+                            <i class="fa fa-lock" aria-hidden="true"></i> 未完成，无法查看
+                        </button>
+                    </div>
+                </div>
+
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <div class="experiment-title">
+                            <i class="fa fa-lightbulb-o" aria-hidden="true"></i>
+                            实验五：光照模型
+                        </div>
+                        <span class="experiment-status status-pending">待完成</span>
+                    </div>
+                    <div class="experiment-body">
+                        <p class="experiment-desc">
+                            实现基本光照模型（环境光、漫反射、镜面反射），增强3D场景的真实感。
+                        </p>
+                        <button class="view-btn" disabled>
+                            <i class="fa fa-lock" aria-hidden="true"></i> 未完成，无法查看
+                        </button>
+                    </div>
+                </div>
+
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <div class="experiment-title">
+                            <i class="fa fa-cubes" aria-hidden="true"></i>
+                            实验六：3D模型加载
+                        </div>
+                        <span class="experiment-status status-pending">待完成</span>
+                    </div>
+                    <div class="experiment-body">
+                        <p class="experiment-desc">
+                            学习加载并渲染外部3D模型文件（如.obj格式），实现复杂模型的显示。
+                        </p>
+                        <button class="view-btn" disabled>
+                            <i class="fa fa-lock" aria-hidden="true"></i> 未完成，无法查看
+                        </button>
+                    </div>
+                </div>
+
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <div class="experiment-title">
+                            <i class="fa fa-scissors" aria-hidden="true"></i>
+                            实验七：裁剪算法
+                        </div>
+                        <span class="experiment-status status-pending">待完成</span>
+                    </div>
+                    <div class="experiment-body">
+                        <p class="experiment-desc">
+                            实现线段和多边形的裁剪算法（如Cohen-Sutherland、Sutherland-Hodgman）。
+                        </p>
+                        <button class="view-btn" disabled>
+                            <i class="fa fa-lock" aria-hidden="true"></i> 未完成，无法查看
+                        </button>
+                    </div>
+                </div>
+
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <div class="experiment-title">
+                            <i class="fa fa-snowflake-o" aria-hidden="true"></i>
+                            实验八：分形图形
+                        </div>
+                        <span class="experiment-status status-pending">待完成</span>
+                    </div>
+                    <div class="experiment-body">
+                        <p class="experiment-desc">
+                            生成各类分形图形（如Mandelbrot集合、Julia集合），理解分形几何原理。
+                        </p>
+                        <button class="view-btn" disabled>
+                            <i class="fa fa-lock" aria-hidden="true"></i> 未完成，无法查看
+                        </button>
+                    </div>
+                </div>
+
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <div class="experiment-title">
+                            <i class="fa fa-film" aria-hidden="true"></i>
+                            实验九：动画技术
+                        </div>
+                        <span class="experiment-status status-pending">待完成</span>
+                    </div>
+                    <div class="experiment-body">
+                        <p class="experiment-desc">
+                            实现基本动画技术，包括关键帧动画、路径动画等，制作简单动画效果。
+                        </p>
+                        <button class="view-btn" disabled>
+                            <i class="fa fa-lock" aria-hidden="true"></i> 未完成，无法查看
+                        </button>
+                    </div>
+                </div>
+
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <div class="experiment-title">
+                            <i class="fa fa-flag-checkered" aria-hidden="true"></i>
+                            实验十：综合项目
+                        </div>
+                        <span class="experiment-status status-pending">待完成</span>
+                    </div>
+                    <div class="experiment-body">
+                        <p class="experiment-desc">
+                            综合运用前九次实验的技术，完成一个小型计算机图形学应用项目。
+                        </p>
+                        <button class="view-btn" disabled>
+                            <i class="fa fa-lock" aria-hidden="true"></i> 未完成，无法查看
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载动画效果 - 卡片渐入
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.experiment-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+        });
+    </script>
+</body>
+</html>
