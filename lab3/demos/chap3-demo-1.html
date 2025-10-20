@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>等边三角形图形变换演示</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        #glCanvas {
+            border: 2px solid #666;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 6px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 30px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #eee;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #555;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #ff85a2;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-item span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            width: 180px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #ff85a2;
+            box-shadow: 0 0 0 3px rgba(255,133,162,0.2);
+        }
+
+        input[type="number"] {
+            appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebGL图形变换演示</h1>
+    <canvas id="glCanvas" width="600" height="600"></canvas>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>平移</label>
+            <div class="control-item">
+                <span>X轴平移量:</span>
+                <input type="number" id="tx" value="0" step="0.1">
+            </div>
+            <div class="control-item">
+                <span>Y轴平移量:</span>
+                <input type="number" id="ty" value="0" step="0.1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>旋转</label>
+            <div class="control-item">
+                <span>旋转角度(度):</span>
+                <input type="number" id="rotation" value="0" step="5">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>缩放</label>
+            <div class="control-item">
+                <span>缩放轴:</span>
+                <select id="scaleAxis">
+                    <option value="both">X和Y轴</option>
+                    <option value="x">仅X轴</option>
+                    <option value="y">仅Y轴</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <span>缩放因子:</span>
+                <input type="number" id="scaleFactor" value="1" step="0.1" min="0.1">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取Canvas元素并初始化WebGL上下文
+        const canvas = document.getElementById('glCanvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+        if (!gl) {
+            alert('无法初始化WebGL，您的浏览器可能不支持');
+        }
+
+        // 顶点着色器程序
+        const vsSource = `
+            attribute vec4 aVertexPosition;
+            uniform mat4 uModelViewMatrix;
+            uniform mat4 uProjectionMatrix;
+
+            void main() {
+                gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+            }
+        `;
+
+        // 片段着色器程序
+        const fsSource = `
+            precision mediump float;
+            uniform vec4 uColor;
+
+            void main() {
+                gl_FragColor = uColor;
+            }
+        `;
+
+        // 初始化着色器程序
+        function initShaderProgram(gl, vsSource, fsSource) {
+            const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+            const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+            const shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertexShader);
+            gl.attachShader(shaderProgram, fragmentShader);
+            gl.linkProgram(shaderProgram);
+
+            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+                alert('无法初始化着色器程序: ' + gl.getProgramInfoLog(shaderProgram));
+                return null;
+            }
+
+            return shaderProgram;
+        }
+
+        // 创建着色器
+        function loadShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                alert('着色器编译失败: ' + gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+
+            return shader;
+        }
+
+        // 初始化着色器程序
+        const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+        // 获取着色器变量位置
+        const programInfo = {
+            program: shaderProgram,
+            attribLocations: {
+                vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+            },
+            uniformLocations: {
+                projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+                modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+                color: gl.getUniformLocation(shaderProgram, 'uColor'),
+            },
+        };
+
+        // 创建等边三角形顶点数据 (中心在原点)
+        const triangleVerticesBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangleVerticesBuffer);
+
+        // 等边三角形的三个顶点坐标
+        const vertices = [
+            0.0,  0.5,  0.0,   // 顶部
+            0.433, -0.25, 0.0, // 右下 (sqrt(3)/2 ≈ 0.433)
+            -0.433, -0.25, 0.0 // 左下
+        ];
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+        // 创建索引缓冲区
+        const triangleIndicesBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleIndicesBuffer);
+
+        const indices = [0, 1, 2]; // 三角形的三个顶点索引
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+        // 初始化场景
+        function initScene() {
+            gl.clearColor(0.97, 0.97, 0.97, 1.0);  // 浅灰色背景
+            gl.clearDepth(1.0);                    // 清除深度缓冲区
+            gl.enable(gl.DEPTH_TEST);              // 启用深度测试
+            gl.depthFunc(gl.LEQUAL);               // 近的物体遮挡远的物体
+        }
+
+        // 绘制场景
+        function drawScene(programInfo, tx, ty, rotation, scaleAxis, scaleFactor) {
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            // 设置透视投影矩阵
+            const fieldOfView = 45 * Math.PI / 180;  // 弧度
+            const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+            const zNear = 0.1;
+            const zFar = 100.0;
+            const projectionMatrix = mat4.create();
+
+            mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+
+            // 设置模型视图矩阵
+            const modelViewMatrix = mat4.create();
+
+            // 将物体移到视野内
+            mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -5.0]);
+
+            // 应用平移
+            mat4.translate(modelViewMatrix, modelViewMatrix, [tx, ty, 0.0]);
+
+            // 应用旋转 (绕Z轴)
+            mat4.rotateZ(modelViewMatrix, modelViewMatrix, rotation * Math.PI / 180);
+
+            // 应用缩放
+            let scaleX = 1, scaleY = 1;
+            if (scaleAxis === 'x' || scaleAxis === 'both') scaleX = scaleFactor;
+            if (scaleAxis === 'y' || scaleAxis === 'both') scaleY = scaleFactor;
+            mat4.scale(modelViewMatrix, modelViewMatrix, [scaleX, scaleY, 1.0]);
+
+            // 准备顶点数据
+            gl.bindBuffer(gl.ARRAY_BUFFER, triangleVerticesBuffer);
+            gl.vertexAttribPointer(
+                programInfo.attribLocations.vertexPosition,
+                3,          // 每个顶点3个分量
+                gl.FLOAT,   // 数据类型
+                false,      // 不归一化
+                0,          // 步长
+                0           // 偏移量
+            );
+            gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+
+            // 绑定索引缓冲区
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleIndicesBuffer);
+
+            // 使用着色器程序
+            gl.useProgram(programInfo.program);
+
+            // 设置uniform变量
+            gl.uniformMatrix4fv(
+                programInfo.uniformLocations.projectionMatrix,
+                false,
+                projectionMatrix
+            );
+            gl.uniformMatrix4fv(
+                programInfo.uniformLocations.modelViewMatrix,
+                false,
+                modelViewMatrix
+            );
+
+            // 设置粉色 (RGB值调整为柔和的粉色)
+            gl.uniform4fv(programInfo.uniformLocations.color, [1.0, 0.7, 0.85, 1.0]);
+
+            // 绘制三角形
+            const vertexCount = 3;  // 三角形只有3个顶点
+            const type = gl.UNSIGNED_SHORT;
+            const offset = 0;
+            gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+        }
+
+        // 加载gl-matrix库 (提供矩阵运算功能)
+        function loadScript(url, callback) {
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = url;
+            script.onload = callback;
+            document.head.appendChild(script);
+        }
+
+        // 初始化并开始渲染
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js', function() {
+            initScene();
+
+            // 初始绘制
+            updateScene();
+
+            // 为所有控件添加事件监听
+            document.getElementById('tx').addEventListener('input', updateScene);
+            document.getElementById('ty').addEventListener('input', updateScene);
+            document.getElementById('rotation').addEventListener('input', updateScene);
+            document.getElementById('scaleAxis').addEventListener('change', updateScene);
+            document.getElementById('scaleFactor').addEventListener('input', updateScene);
+        });
+
+        // 更新场景
+        function updateScene() {
+            const tx = parseFloat(document.getElementById('tx').value);
+            const ty = parseFloat(document.getElementById('ty').value);
+            const rotation = parseFloat(document.getElementById('rotation').value);
+            const scaleAxis = document.getElementById('scaleAxis').value;
+            const scaleFactor = parseFloat(document.getElementById('scaleFactor').value);
+
+            drawScene(programInfo, tx, ty, rotation, scaleAxis, scaleFactor);
+        }
+    </script>
+</body>
+</html>
