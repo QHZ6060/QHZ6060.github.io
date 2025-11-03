@@ -1,1 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算机图形学实验3.2</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #canvas-container { display: flex; width: 100vw; height: 100vh; }
+        #scene1 { 
+            width: 50vw; 
+            height: 100vh; 
+            background-color: #000; /* 左侧黑色画布 */
+        }
+        #scene2 { 
+            width: 50vw; 
+            height: 100vh; 
+            background-color: #fff; /* 右侧白色画布 */
+            position: relative;
+        }
+        .left-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            width: 220px;
+        }
+        .right-controls {
+            position: absolute;
+            top: 80px; /* 位于提示下方 */
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            color: white;
+            width: 220px;
+        }
+        button, select, input { margin: 5px; }
+        #color-picker { width: 60px; height: 30px; }
+        .axis-label {
+            position: absolute;
+            font-family: Arial;
+            font-size: 12px;
+            pointer-events: none;
+        }
+        .scene-hint {
+            position: absolute;
+            font-family: Arial;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #scene1-hint {
+            top: 20px;
+            left: 250px; /* 左侧控件右侧 */
+            background: rgba(255, 255, 255, 0.8);
+            color: #000;
+            font-size: 14px;
+        }
+        #scene2-hint {
+            top: 20px; /* 右侧画布正上方 */
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 0, 0.8); /* 红色背景醒目 */
+            color: #fff;
+            font-size: 20px; /* 放大字体 */
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div id="scene1">
+            <div class="scene-hint" id="scene1-hint">3D立方体操作区（可选中物体进行变换）</div>
+        </div>
+        <div id="scene2">
+            <div class="scene-hint" id="scene2-hint">单击空白处处添加图形</div>
+        </div>
+    </div>
+    
+    <!-- 左侧控件 -->
+    <div class="left-controls">
+        <h4>3D立方体控制</h4>
+        <button id="add-cube">添加立方体</button>
+        <button id="clear-scene">清空所有场景</button>
+        
+        <h4 style="margin-top: 15px;">变换控制（需鼠标单击选中物体）</h4>
+        <div>
+            <button data-axis="x" data-action="translate+">X+ 平移</button>
+            <button data-axis="x" data-action="translate-">X- 平移</button>
+        </div>
+        <div>
+            <button data-axis="y" data-action="translate+">Y+ 平移</button>
+            <button data-axis="y" data-action="translate-">Y- 平移</button>
+        </div>
+        <div>
+            <button data-axis="z" data-action="translate+">Z+ 平移</button>
+            <button data-axis="z" data-action="translate-">Z- 平移</button>
+        </div>
+        <div>
+            <button data-axis="x" data-action="scale+">X+ 缩放</button>
+            <button data-axis="x" data-action="scale-">X- 缩放</button>
+        </div>
+        <div>
+            <button data-axis="y" data-action="scale+">Y+ 缩放</button>
+            <button data-axis="y" data-action="scale-">Y- 缩放</button>
+        </div>
+        <div>
+            <button data-axis="z" data-action="scale+">Z+ 缩放</button>
+            <button data-axis="z" data-action="scale-">Z- 缩放</button>
+        </div>
+        <div id="selected-info" style="margin-top: 10px; font-size: 12px; color: #666;">未选中物体</div>
+    </div>
+    
+    <!-- 右侧控件 -->
+    <div class="right-controls">
+        <h4>2D图形控制</h4>
+        <select id="shape-select">
+            <option value="cube">立方体</option>
+            <option value="triangle">正三角形</option>
+            <option value="square">正方形</option>
+            <option value="circle">圆</option>
+        </select>
+        <input type="color" id="color-picker" value="#ff0000">
+        <div>
+            <label for="circle-sides">圆的边数：</label>
+            <input type="range" id="circle-sides" min="3" max="60" value="30">
+        </div>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="lab3.2.js"></script>
+</body>
+</html>
