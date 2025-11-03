@@ -1,5 +1,4 @@
-
-// 全局变量
+//全局变量
 let selectedObject = null;
 const allCubes = [];
 let raycaster = new THREE.Raycaster();
